@@ -101,3 +101,29 @@ exports.loginAdmin = async (req, res) => {
         return res.status(500).json({ success: false, error: err.message });
     }
 };
+exports.getAdminUsers = async (req, res) => {
+    try {
+        // استعلام يجلب فقط المستخدمين من نوع admin أو admin_user
+        const sql = `
+            SELECT 
+                user_id, user_first_name, user_last_name, 
+                user_email, user_phone, user_address, 
+                user_role, user_status, created_at 
+            FROM users 
+            WHERE user_role IN ('admin', 'admin_user')
+            ORDER BY created_at DESC`;
+
+        const [rows] = await db.execute(sql);
+
+        return res.status(200).json({
+            success: true,
+            users: rows
+        });
+    } catch (err) {
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error fetching admins", 
+            error: err.message 
+        });
+    }
+};
