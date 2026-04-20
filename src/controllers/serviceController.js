@@ -27,7 +27,7 @@ exports.addService = async (req, res) => {
         
         res.status(201).json({ 
             success: true, 
-            message: "تم إضافة الخدمة بنجاح!",
+            message: "Service added successfully!",
             data: { id: result.insertId, name } 
         });
     } catch (err) {
@@ -97,7 +97,7 @@ exports.updateService = async (req, res) => {
         params.push(id);
 
         await db.execute(sql, params);
-        res.status(200).json({ success: true, message: "تم تحديث الخدمة بنجاح" });
+        res.status(200).json({ success: true, message: "Service updated successfully!" });
     } catch (err) {
         console.error("Update Error:", err);
         res.status(500).json({ success: false, error: err.message });
@@ -114,7 +114,7 @@ exports.deleteService = async (req, res) => {
             return res.status(404).json({ success: false, message: "Service not found" });
         }
 
-        res.status(200).json({ success: true, message: "تم حذف الخدمة بنجاح" });
+        res.status(200).json({ success: true, message: "Service deleted successfully!" });
     } catch (err) {
         console.error("Delete Error:", err);
         res.status(500).json({ success: false, error: err.message });
@@ -128,6 +128,6 @@ exports.getServicesBySubCategory = async (req, res) => {
         const [rows] = await db.execute(sql, [subId]);
         res.status(200).json({ success: true, data: rows });
     } catch (err) {
-        res.status(500).json({ success: false, error: "حدث خطأ أثناء جلب الخدمات" });
+        res.status(500).json({ success: false, error: "An error occurred while fetching services" });
     }
 };

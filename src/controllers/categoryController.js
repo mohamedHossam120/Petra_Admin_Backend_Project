@@ -1,12 +1,11 @@
 const { db } = require('../config/db');
 
-
 exports.addCategory = async (req, res) => {
     try {
         if (!req.body || Object.keys(req.body).length === 0) {
             return res.status(400).json({ 
                 success: false, 
-                message: "لم تصل بيانات، تأكد من إعدادات form-data في Postman." 
+                message: "No data received. Please check your form-data settings in Postman." 
             });
         }
 
@@ -15,7 +14,10 @@ exports.addCategory = async (req, res) => {
         const category_image = req.file ? req.file.path : null;
 
         if (!category_name) {
-            return res.status(400).json({ success: false, message: "حقل الاسم مطلوب." });
+            return res.status(400).json({ 
+                success: false, 
+                message: "Category name is required." 
+            });
         }
 
         const sql = `INSERT INTO categories (category_name, category_status, category_image, category_description) VALUES (?, ?, ?, ?)`;
@@ -29,7 +31,7 @@ exports.addCategory = async (req, res) => {
         
         return res.status(201).json({ 
             success: true,
-            message: "تمت إضافة الفئة بنجاح!",
+            message: "Category added successfully!",
             data: { 
                 category_id: result.insertId, 
                 category_name: category_name, 
@@ -39,14 +41,15 @@ exports.addCategory = async (req, res) => {
         });
 
     } catch (err) {
-        console.error("🔴 Backend Error:", err); 
+        console.error("Backend Error:", err); 
         return res.status(500).json({ 
             success: false, 
-            message: "خطأ في قاعدة البيانات", 
+            message: "Database error occurred", 
             error: err.message 
         });
     }
 };
+
 exports.getAllCategories = async (req, res) => {
     try {
         const sql = `
@@ -69,14 +72,15 @@ exports.getAllCategories = async (req, res) => {
         });
 
     } catch (err) {
-        console.error("🔴 Error in getAllCategories:", err.message);
+        console.error("Error in getAllCategories:", err.message);
         return res.status(500).json({ 
             success: false, 
-            message: "خطأ في جلب بيانات الأقسام", 
+            message: "Error fetching category data", 
             error: err.message 
         });
     }
 };
+
 exports.updateCategory = async (req, res) => {
     const { id } = req.params;
     const { category_name, category_description, category_status } = req.body;
@@ -86,7 +90,10 @@ exports.updateCategory = async (req, res) => {
     try {
         const [cat] = await db.execute('SELECT * FROM categories WHERE category_id = ?', [id]);
         if (cat.length === 0) {
-            return res.status(404).json({ success: false, message: "القسم غير موجود." });
+            return res.status(404).json({ 
+                success: false, 
+                message: "Category not found." 
+            });
         }
 
         const sql = `
@@ -107,10 +114,17 @@ exports.updateCategory = async (req, res) => {
             id
         ]);
 
-        return res.status(200).json({ success: true, message: "تم تحديث القسم بنجاح!" });
+        return res.status(200).json({ 
+            success: true, 
+            message: "Category updated successfully!" 
+        });
 
     } catch (err) {
-        return res.status(500).json({ success: false, error: err.message });
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error updating category", 
+            error: err.message 
+        });
     }
 };
 
@@ -119,14 +133,23 @@ exports.deleteCategory = async (req, res) => {
     try {
         const sql = `DELETE FROM categories WHERE category_id = ?`;
         await db.execute(sql, [id]);
-        return res.status(200).json({ success: true, message: "تم حذف القسم بنجاح!" });
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: "Category deleted successfully!" 
+        });
+
     } catch (err) {
         if (err.code === 'ER_ROW_IS_REFERENCED_2') {
             return res.status(400).json({ 
                 success: false, 
-                message: "لا يمكن حذف هذا القسم لأنه يحتوي على أقسام فرعية مرتبطة به." 
+                message: "Cannot delete this category because it has linked subcategories." 
             });
         }
-        return res.status(500).json({ success: false, error: err.message });
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error deleting category", 
+            error: err.message 
+        });
     }
 };

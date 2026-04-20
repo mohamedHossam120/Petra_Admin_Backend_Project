@@ -103,7 +103,6 @@ exports.loginAdmin = async (req, res) => {
 };
 exports.getAdminUsers = async (req, res) => {
     try {
-        // استعلام يجلب فقط المستخدمين من نوع admin أو admin_user
         const sql = `
             SELECT 
                 user_id, user_first_name, user_last_name, 
@@ -128,16 +127,14 @@ exports.getAdminUsers = async (req, res) => {
     }
 };
 exports.deleteAdmin = async (req, res) => {
-    const { id } = req.params; // بناخد الـ ID من الرابط
+    const { id } = req.params; 
     const connection = await db.getConnection();
 
     try {
         await connection.beginTransaction();
 
-        // 1. حذف البيانات المرتبطة من جدول admins أولاً (بسبب الـ Foreign Key)
         await connection.execute('DELETE FROM admins WHERE user_id = ?', [id]);
 
-        // 2. حذف المستخدم من جدول users
         const [result] = await connection.execute('DELETE FROM users WHERE user_id = ?', [id]);
 
         if (result.affectedRows === 0) {
@@ -157,7 +154,7 @@ exports.deleteAdmin = async (req, res) => {
     }
 };
 exports.updateAdmin = async (req, res) => {
-    const { id } = req.params; // الـ ID بتاع المستخدم
+    const { id } = req.params; 
     const { 
         user_first_name, 
         user_last_name, 
@@ -175,7 +172,6 @@ exports.updateAdmin = async (req, res) => {
     try {
         await connection.beginTransaction();
 
-        // 1. تحديث جدول users
         let userSql = `
             UPDATE users 
             SET user_first_name = ?, user_last_name = ?, user_email = ?, 
@@ -183,7 +179,6 @@ exports.updateAdmin = async (req, res) => {
         `;
         let params = [user_first_name, user_last_name, user_email, user_phone, user_address, user_role, user_status];
 
-        // لو فيه باسورد جديدة، بنشفرها ونضيفها للـ Query
         if (user_pass && user_pass.trim() !== "") {
             const hashedPassword = await bcrypt.hash(user_pass, 10);
             userSql += `, user_pass = ?`;
@@ -195,7 +190,6 @@ exports.updateAdmin = async (req, res) => {
 
         await connection.execute(userSql, params);
 
-        // 2. تحديث جدول admins (الوصف)
         const adminSql = `UPDATE admins SET description = ? WHERE user_id = ?`;
         await connection.execute(adminSql, [description || 'Petra System User', id]);
 

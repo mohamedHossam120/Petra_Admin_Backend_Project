@@ -7,7 +7,6 @@ const checkUserExists = async (email) => {
     return rows.length > 0;
 };
 
-
 exports.registerCustomer = async (req, res) => {
     const { 
         user_frist_name, 
@@ -21,12 +20,14 @@ exports.registerCustomer = async (req, res) => {
     } = req.body;
 
     try {
-      
         const checkSql = 'SELECT * FROM users WHERE user_email = ?';
         const [existingUser] = await db.execute(checkSql, [user_email || null]); 
 
         if (existingUser.length > 0) {
-            return res.status(400).json({ message: "الإيميل مسجل بالفعل" });
+            return res.status(400).json({ 
+                success: false, 
+                message: "Email is already registered." 
+            });
         }
 
         const values = [
@@ -34,7 +35,7 @@ exports.registerCustomer = async (req, res) => {
             user_last_name || null,
             user_phone || null,
             user_email || null,
-            user_pass || null,
+            user_pass || null, 
             user_role || 'customer',
             user_status || 'active',
             user_address || null
@@ -46,20 +47,20 @@ exports.registerCustomer = async (req, res) => {
 
         await db.execute(sql, values);
 
-        res.status(201).json({ success: true, message: "تم التسجيل بنجاح" });
+        res.status(201).json({ 
+            success: true, 
+            message: "Registration successful!" 
+        });
 
     } catch (error) {
         console.error("Registration error:", error);
         res.status(500).json({ 
             success: false, 
-            message: "Registration error", 
+            message: "An error occurred during registration", 
             error: error.message 
         });
     }
 };
-
-
-
 
 exports.login = async (req, res) => {
     const { email, password } = req.body;
@@ -68,20 +69,28 @@ exports.login = async (req, res) => {
         const user = rows[0];
 
         if (!user || !(await bcrypt.compare(password, user.user_pass))) {
-            return res.status(401).json({ message: "Invalid login credentials" });
+            return res.status(401).json({ 
+                success: false, 
+                message: "Invalid login credentials" 
+            });
         }
 
         if (user.user_status !== 'active') {
-            return res.status(403).json({ message: `Account is ${user.user_status}` });
+            return res.status(403).json({ 
+                success: false, 
+                message: `Account is ${user.user_status}` 
+            });
         }
 
+        // Generate JWT Token
         const token = jwt.sign(
             { id: user.user_id, role: user.user_role },
             process.env.JWT_SECRET || 'secret_key',
             { expiresIn: '1d' }
         );
 
-        return res.json({ 
+        return res.status(200).json({ 
+            success: true,
             token, 
             role: user.user_role, 
             name: user.user_name, 
@@ -89,16 +98,22 @@ exports.login = async (req, res) => {
             image: user.profile_image 
         });
     } catch (err) {
-        return res.status(500).json({ message: "Server error during login" });
+        return res.status(500).json({ 
+            success: false, 
+            message: "Server error during login" 
+        });
     }
 };
 
 exports.getUsers = async (req, res) => {
     try {
         const [rows] = await db.execute('SELECT user_id, user_name, user_email, user_role, user_status, user_phone, profile_image FROM users');
-        return res.json(rows);
+        return res.status(200).json(rows);
     } catch (err) {
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ 
+            success: false, 
+            error: err.message 
+        });
     }
 };
 
@@ -120,9 +135,15 @@ exports.updateUser = async (req, res) => {
         params.push(userId);
 
         await db.execute(sql, params);
-        return res.json({ message: "Profile updated successfully" });
+        return res.status(200).json({ 
+            success: true, 
+            message: "Profile updated successfully" 
+        });
     } catch (err) {
-        return res.status(500).json({ error: err.message });
+        return res.status(500).json({ 
+            success: false, 
+            error: err.message 
+        });
     }
 };
 
@@ -130,8 +151,15 @@ exports.deleteUser = async (req, res) => {
     const { id } = req.params;
     try {
         await db.execute(`DELETE FROM users WHERE user_id = ?`, [id]);
-        return res.status(200).json({ message: "User deleted successfully" });
+        return res.status(200).json({ 
+            success: true, 
+            message: "User deleted successfully" 
+        });
     } catch (err) {
-        return res.status(500).json({ message: "Error deleting user", error: err.message });
+        return res.status(500).json({ 
+            success: false, 
+            message: "Error deleting user", 
+            error: err.message 
+        });
     }
 };

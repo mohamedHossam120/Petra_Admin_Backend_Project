@@ -7,9 +7,10 @@ exports.addSubCategory = async (req, res) => {
         if (!subcategory_name || !category_id) {
             return res.status(400).json({ 
                 success: false, 
-                message: "اسم القسم الفرعي ورقم القسم الرئيسي مطلوبان." 
+                message: "Subcategory name and Category ID are required." 
             });
         }
+
         const sql = `INSERT INTO subcategories 
                      (subcategory_name, category_id, subcategory_description, subcategory_status) 
                      VALUES (?, ?, ?, 'active')`;
@@ -22,7 +23,7 @@ exports.addSubCategory = async (req, res) => {
         
         return res.status(201).json({ 
             success: true,
-            message: "تمت إضافة القسم الفرعي بنجاح!",
+            message: "Subcategory added successfully!",
             data: { 
                 subcategory_id: result.insertId,
                 subcategory_name, 
@@ -36,11 +37,12 @@ exports.addSubCategory = async (req, res) => {
         console.error("Database Error:", err.message);
         return res.status(500).json({ 
             success: false, 
-            message: "خطأ في قاعدة البيانات", 
+            message: "Database error occurred", 
             error: err.message 
         });
     }
 };
+
 exports.getAllSubCategories = async (req, res) => {
     try {
         const sql = `
@@ -70,12 +72,11 @@ exports.getAllSubCategories = async (req, res) => {
     }
 };
 
-
 exports.getSubCategoriesByCategory = async (req, res) => {
     const { categoryId } = req.params;
 
     try {
-            const sql = `
+        const sql = `
             SELECT 
                 subcategory_id, 
                 subcategory_name, 
@@ -92,7 +93,7 @@ exports.getSubCategoriesByCategory = async (req, res) => {
         if (rows.length === 0) {
             return res.status(200).json({ 
                 success: true, 
-                message: "لا توجد أقسام فرعية لهذا القسم حالياً.", 
+                message: "No subcategories found for this category.", 
                 data: [] 
             });
         }
@@ -104,14 +105,15 @@ exports.getSubCategoriesByCategory = async (req, res) => {
         });
 
     } catch (err) {
-        console.error("🔴 Error fetching subcategories:", err.message);
+        console.error("Error fetching subcategories:", err.message);
         return res.status(500).json({ 
             success: false, 
-            message: "خطأ في جلب الأقسام الفرعية", 
+            message: "Error retrieving subcategories", 
             error: err.message 
         });
     }
 };
+
 exports.deleteSubCategory = async (req, res) => {
     const { id } = req.params; 
 
@@ -124,7 +126,7 @@ exports.deleteSubCategory = async (req, res) => {
         if (check.length === 0) {
             return res.status(404).json({ 
                 success: false, 
-                message: "القسم الفرعي غير موجود بالفعل." 
+                message: "Subcategory not found." 
             });
         }
 
@@ -133,26 +135,28 @@ exports.deleteSubCategory = async (req, res) => {
 
         return res.status(200).json({ 
             success: true, 
-            message: "تم حذف القسم الفرعي بنجاح!" 
+            message: "Subcategory deleted successfully!" 
         });
 
     } catch (err) {
-        console.error("🔴 Delete Error:", err.message);
+        console.error("Delete Error:", err.message);
         
+        // Handle Foreign Key Constraint Error
         if (err.code === 'ER_ROW_IS_REFERENCED_2') {
             return res.status(400).json({ 
                 success: false, 
-                message: "لا يمكن حذف هذا القسم لأنه مرتبط بخدمات أو مقدمي خدمة." 
+                message: "Cannot delete this subcategory because it is linked to services or providers." 
             });
         }
 
         return res.status(500).json({ 
             success: false, 
-            message: "خطأ في قاعدة البيانات أثناء الحذف", 
+            message: "Database error during deletion", 
             error: err.message 
         });
     }
 };
+
 exports.updateSubCategory = async (req, res) => {
     const { id } = req.params; 
     const { subcategory_name, category_id, subcategory_description, subcategory_status } = req.body;
@@ -160,10 +164,9 @@ exports.updateSubCategory = async (req, res) => {
     try {
         const [sub] = await db.execute('SELECT * FROM subcategories WHERE subcategory_id = ?', [id]);
         if (sub.length === 0) {
-            return res.status(404).json({ success: false, message: "القسم الفرعي غير موجود." });
+            return res.status(404).json({ success: false, message: "Subcategory not found." });
         }
 
-    
         const sql = `
             UPDATE subcategories 
             SET 
@@ -184,14 +187,14 @@ exports.updateSubCategory = async (req, res) => {
 
         return res.status(200).json({ 
             success: true, 
-            message: "تم تحديث القسم الفرعي بنجاح!" 
+            message: "Subcategory updated successfully!" 
         });
 
     } catch (err) {
-        console.error("🔴 Update Error:", err.message);
+        console.error("Update Error:", err.message);
         return res.status(500).json({ 
             success: false, 
-            message: "خطأ في تعديل البيانات", 
+            message: "Error updating subcategory data", 
             error: err.message 
         });
     }
