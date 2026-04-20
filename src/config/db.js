@@ -7,20 +7,21 @@ const db = mysql.createPool({
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
     waitForConnections: true,
-    connectionLimit: 5, // قللنا العدد عشان السيرفر ميزهقش
+    connectionLimit: 2, // قلل الرقم ده جداً عشان متعملش زحمة على السيرفر
     queueLimit: 0,
-    connectTimeout: 20000 // زودنا الوقت لـ 20 ثانية عشان ندي فرصة للاتصال
+    connectTimeout: 30000, // 30 ثانية انتظار
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000
 });
 
-// دالة بسيطة عشان نتأكد إن الدنيا تمام
 const connectDB = async () => {
     try {
         const connection = await db.getConnection();
-        console.log('✅ Database is back online!');
+        console.log('✅ Connected! Database is alive.');
         connection.release();
     } catch (error) {
-        console.error('❌ Connection still failing:', error.message);
-        // مفيش process.exit هنا عشان السيرفر ميفصلش
+        console.error('❌ Timeout/Connection Error:', error.message);
+        // السيرفر مش هيموت هنا، هيفضل يحاول
     }
 };
 
